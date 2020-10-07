@@ -11,7 +11,6 @@ def end_game():
         print("Игра окончена(((")
         sys.exit()
 
-
 def start_game():
     print("Введите промежуток в котором отгадывание число")
     print("Начало промежутка")
@@ -23,9 +22,9 @@ def start_game():
         end = start
         start = tmp
         del tmp
-    num = random.randrange(start, end)
-    l=list(range(start,end+1))
+    l = list(range(start, end+1))
     print(l)
+    num = l[(len(l)-1) // 2]
     print(
         'Теперь компьютер попытается отгадать число из промежутка, если решишь,что тебе надоело, то набери любую букву\n')
     while True:
