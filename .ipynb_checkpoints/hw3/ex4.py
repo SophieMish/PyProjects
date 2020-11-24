@@ -16,7 +16,7 @@ class CollectionItr:
         return self
 
 
-collection = CollectionItr(["apple", "mango", "orange", "pineapple"])
+collection = CollectionItr(["apple", "mango", "orange", "pineapple","watermelon"])
 for i in collection:
     print(i)
 
