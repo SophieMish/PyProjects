@@ -1,10 +1,7 @@
-from pony.orm import Database, Required, Optional, PrimaryKey, Json, db_session, select, delete, get, count, Set
-from datetime import date
+from pony.orm import db_session
 import datetime
-from prettytable import PrettyTable
 from db_module import *
 import os
-import keyboard
 
 
 # <<<Просмотр всех записей справочника:>>>
@@ -25,15 +22,14 @@ import keyboard
 # Вывод возраста человека (записи) по Имени и Фамилии +
 
 def welcome():
-    print("\nChoose the option:\n"
-          "0 - Quit\n"
-          "1 - View all directory entries\n"
-          "2 - Search by reference\n"
-          "3 - Add a new entry\n"
-          "4 - Remove an entry from the directory\n"
-          "5 - Change a field\n"
-          "6 - Show person's age by name and surname\n"
-          )
+    print(f'{os.linesep}', "Choose the option:", f'{os.linesep}',
+          "0 <- Quit", f'{os.linesep}',
+          "1 <- View all directory entries", f'{os.linesep}',
+          "2 <- Search by reference", f'{os.linesep}',
+          "3 <- Add a new entry", f'{os.linesep}',
+          "4 <- Remove an entry from the directory", f'{os.linesep}',
+          "5 <- Change a field", f'{os.linesep}'
+                                 " 6 <- Show person's age by name and surname", f'{os.linesep}')
     return validate_choice(6)
 
 
@@ -41,6 +37,8 @@ def validate_choice(n):
     while True:
         try:
             ans = input("My choice ᐅ ")
+            if not ans:
+                ans = ''
             if ans == 'exit':
                 raise Exception
             else:
@@ -49,23 +47,23 @@ def validate_choice(n):
                 continue
             break
         except ValueError:
-            print('Input Error, please try to type again')
+            print('Input Error, please try to type again!')
     return ans
 
 
 def validate_date():
     while True:
         try:
-            ans = str(input('Enter the date ᐅ'))
-            if ans == '':
+            ans = input('Enter the date ᐅ')
+            if ans =='':
                 ans = None
             elif ans == 'exit':
                 raise Exception
             else:
-                ans = datetime.datetime.strptime(ans, '%d.%m.%Y')
+                ans = datetime.datetime.strptime(ans, '%d-%m-%Y')
             break
         except ValueError:
-            print('Input Error, please try to type again. Incorrect data format, should be DD.MM.YYYY')
+            print('Input Error, please try to type again. Incorrect data format, should be DD-MM-YYYY')
     return ans
 
 
@@ -80,10 +78,14 @@ def validate_phone(param=0):
                       "Home - 1")
                 ans = validate_choice(2)
                 if ans == 0:
-                    ans = 'Personal'
+                    ans = ' Personal'
                 elif ans == 1:
                     ans = "Home"
+                elif ans == '':
+                    ans = ''
                 break
+
+
             elif param == 1:
                 ans = str(input("Enter your phone. It can be 11(Personal) or 6(Home) numbers long ᐅ"))
 
@@ -122,28 +124,27 @@ def validate_name_and_surname(param=0):
                     raise Exception
                 if ans.isdigit():
                     continue
-                ans.upper()
                 break
+
             elif param == 1:
                 ans = str(input('Enter the surname of the person ᐅ'))
+                if ans == 'exit':
+                    raise Exception
                 if ans == '':
                     break
-                elif ans == 'exit':
-                    raise Exception
                 if ans.isdigit():
                     continue
-                ans.upper()
                 break
             else:
                 print("Error!")
                 return 0
         except ValueError:
             print('Input Error, please try to type again')
-    return ans
+    return ans.title()
 
 
 def add_new_entity():
-    print("Person - 0\n"
+    print(" Person - 0", f'{os.linesep}',
           "Phone - 1")
     ans = validate_choice(2)
     if ans == 0:
@@ -154,6 +155,7 @@ def add_new_entity():
         birthday = validate_date()
         try:
             add_person(name, surname, phone, type_of_phone, birthday)
+            print('You added a person!')
         except Exception as e:
             print(e)
             return 0
@@ -172,19 +174,18 @@ def quit():
 
 
 def print_table():
-    print("ALL INFORMATION:\n")
-    print_tab()
+    print("ALL INFORMATION:")
+    print_tab('')
 
 
 @db_session
 def search_by_reference():
-    print("You can write the parameters below or skip, tap the space key")
+    print("You can write the parameters below or skip, tap the enter key")
     name = validate_name_and_surname(0)
     surname = validate_name_and_surname(1)
     phone = validate_phone(1)
     try:
-        birthday = validate_date()
-        query = search(name, surname, phone, birthday)
+        query = search(name, surname, phone)
     except ValueError:
         query = search(name, surname, phone)
     print_tab(query)
@@ -199,54 +200,66 @@ def show_person_age():
         print_tab(res)
         print("The age of", name, surname, 'is', show_person_by_age(name, surname))
     else:
-        print("Error! It is impossible to find the person")
+        print("Error! It is impossible to find the person!")
         show_person_age()
 
 
 def remove_entity():
-    print("Enter the type of deletingn\n",
-          "Delete person by phone - 0\n",
-          "Delete phone - 1\n"
-          "Delete Person by name and surname - 2\n")
+    print("Enter the type of deleting", f'{os.linesep}',
+          "Delete person by phone - 0", f'{os.linesep}',
+          "Delete phone - 1", f'{os.linesep}',
+          "Delete person by name and surname - 2", f'{os.linesep}')
     ans = validate_choice(3)
     if ans == 0:
         del_person_by_phone(validate_phone(1))
+        print("We deleted this person!")
     elif ans == 1:
         del_phone(validate_phone(1))
+        print("We deleted this phone!")
     elif ans == 2:
         del_person(validate_name_and_surname(0), validate_name_and_surname(1))
+        print("We deleted this person!")
     else:
-        print("Error! Please try to type again")
+        print("Error! Please try to type again!")
         remove_entity()
+
 
 @db_session
 def change_field():
-    print("Enter the type of changing\n",
-          "Change phone - 0\n",
-          "Change personal data - 1\n")
+    print("Enter the type of changing", f'{os.linesep}',
+          "Change phone - 0", f'{os.linesep}',
+          "Change personal data - 1", f'{os.linesep}')
     ans = validate_choice(2)
     if ans == 0:
         print('Old phone')
         old_phone = validate_phone(1)
-        print('New phone')
-        new_phone = validate_phone(1)
-        print('The type of new phone')
-        type_of_new_phone = validate_phone(0)
-        change_phone(old_phone, new_phone, type_of_new_phone)
-        print("Data was changed")
+        if search(phone = old_phone) is not None:
+            print('New phone')
+            new_phone = validate_phone(1)
+            print('The type of new phone')
+            type_of_new_phone = validate_phone(0)
+            change_phone(old_phone, new_phone, type_of_new_phone)
+            print("Data was changed!")
+        else:
+            print("It is impossible to find a person!",f'{os.linesep}')
+            change_field()
 
     elif ans == 1:
         print('Old name and surname')
         old_name = validate_name_and_surname(0)
         old_surname = validate_name_and_surname(1)
-        print('New name and surname')
-        new_name = validate_name_and_surname(0)
-        new_surname = validate_name_and_surname(1)
-        new_birthday = validate_date()
-        change_person_data(old_name,old_surname, new_name,  new_surname, new_birthday)
-        print("Data was changed")
+        if search(name = old_name,surname = old_surname) is not None:
+            print('New name and surname')
+            new_name = validate_name_and_surname(0)
+            new_surname = validate_name_and_surname(1)
+            new_birthday = validate_date()
+            change_person_data(old_name, old_surname, new_name, new_surname, new_birthday)
+            print("Data was changed!")
+        else:
+            print("It is impossible to find a person!",f'{os.linesep}')
+            change_field()
     else:
-        print("Error! Please try to type again")
+        print("Error! Please try to type again!")
 
 
 def choose_option(ans):
@@ -275,14 +288,3 @@ if __name__ == "__main__":
                 choose_option(ans)
             except Exception:
                 break
-
-
-
-    # show_person_by_age('Denis', 'Bobrov')
-    # change_phone('16789','16789','Home')
-    # del_person_by_phone('16789')
-    # add_phone('John', 'Hold', '89290412152', 'Personal')
-    # del_person('John', 'Hold')
-    # del_phone('123456')
-
-    # print_table()
